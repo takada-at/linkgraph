@@ -9,7 +9,7 @@ function Main(ctx, w, h, data){
 		++path_length;
 	}
 	var unit = Math.floor(max / 100);
-	var len = path_length * 20;
+	var len = path_length * 15;
 	var config = {
 		width: w, height: h, padding: 5,
 		wwidth: len, wheight: len,
