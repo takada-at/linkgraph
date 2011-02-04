@@ -113,6 +113,29 @@ function isVisible(node, config){
 	}
 	return f;
 }
+/*
+function isCross(line, rect){
+    var vs = [ [rect[0], rect[1]],
+               [rect[1], rect[2]],
+               [rect[2], rect[3]],
+               [rect[3], rect[1]]];
+    var f = false;
+    for(var i=0; vs.length;++i){
+		var l2 = vs[i];
+        var d  = (l2[0][0] - line[0][0]) * (line[1][1] - line[0][1]) - (l2[1][0] - line[0][1]) * 
+        if(Math.min(line[0][0], line[1][0]) > Math.max(l2[0][0],   l2[1][0]))
+            continue;
+        if(Math.min(line[0][1], line[1][1]) > Math.max(l2[0][1],   l2[1][1]))
+            continue;
+        if(Math.min(l2[1][0],     l2[1][0]) > Math.max(line[0][0], line[1][0]))
+            continue;
+        if(Math.min(l2[0][1],     l2[1][1]) > Math.max(line[0][1], line[1][1]))
+            continue;
+
+    }
+}
+function isCrossLine(
+*/
 function calcVisibility(nodes, config){
 	var visibleNodes = {};
 	for(var k in nodes){
@@ -254,7 +277,6 @@ function setMouseTracker(w, config){
 	var xmax = config.wwidth - config.width;
 	var ymax = config.wheight - config.height;
 	mc.addListener(function(yaw, pitch){
-					   console.log(yaw, pitch);
 					   var tmpx = config.curx - yaw * 10;
 					   var tmpy = config.cury - pitch * 10;
 					   if(tmpx < 0)tmpx = 0;

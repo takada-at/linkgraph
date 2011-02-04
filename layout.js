@@ -20,7 +20,7 @@ Node.ctx = {}
 function spring(n1,n2,r1,r2,_length){
 	//var length = _length || Node.ctx.spring;
 	//length += r1 + r2;
-    var r = r1 if r1 >= r2 else r2;
+    var r = Math.max(r1,r2);
 	var length = r*8;
 	var k = 0.1,
 	dx = n1[0]-n2[0],
