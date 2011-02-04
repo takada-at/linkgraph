@@ -1,0 +1,34 @@
+<html>
+<head>
+<meta http-equiv="Content-Type"
+      content="text/html; charset=utf-8">
+<script src='./prototype.js'></script>
+<script src='./layout.js'></script>
+<script src='./mouse_tracker.js'></script>
+<script src='./main.js'></script>
+<script type='text/javascript'>
+function run(data){
+    var canvas = document.getElementById('canvas');
+    if(canvas.getContext && data){
+        var main = Main(canvas.getContext('2d'), canvas.width, canvas.height, data);
+        Event.observe(window, 'keydown', function(e){
+            if(37 <= e.keyCode && e.keyCode <= 40){
+                var dir = e.keyCode - 36;
+                main.move(dir, 100);
+            }         
+        });
+        main.run();
+    }
+}
+Event.observe(window, 'load', function(){
+    new Ajax.Request('./toybot.json', {onSuccess: function(r){
+        eval('var data='+r.responseText);
+        run(data);
+    }});
+});
+</script>
+</head>
+<body>
+<canvas id='canvas' width=1000 height=500 />
+</body>
+</html>
