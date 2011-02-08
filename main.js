@@ -265,8 +265,9 @@ function createLinkData(links, nodes, unit){
 			if(!h[k0]) h[k0] = {};
 			var link = Math.sqrt(data / unit);
 			h[k0][k1] = {link: link, data: data};
+			n0.link(n1);
 			if(!n1.hasLink(n0))
-				n0.link(n1);
+                n1.link(n0);
 		}
 	}
 	return h;

@@ -17,11 +17,12 @@ Node.prototype.link = function(n){
 	this.linked.push(n);
 }
 Node.ctx = {}
-function spring(n1,n2,r1,r2,_length){
+function spring(node1,node2,_length){
 	//var length = _length || Node.ctx.spring;
 	//length += r1 + r2;
+    var n1 = node1.pos, n2 = node2.pos, r1 = node1.r, r2 = node2.r;
     var r = Math.max(r1,r2);
-	var length = r*8;
+	var length = r1 + r2 + 500;
 	var k = 0.1,
 	dx = n1[0]-n2[0],
 	dy = n1[1]-n2[1],
@@ -40,9 +41,11 @@ function spring(n1,n2,r1,r2,_length){
 	if(ad == 0)
 		return [0,0];
 	f = Math.log(ad)*sign;
-	return [-k*f*cos, -k*f*sin];
+	var f1= [-k*f*cos, -k*f*sin];
+    return f1;
 }
-function repulsive(n1,n2,r1,r2, _length){
+function repulsive(node1,node2, _length){
+    var n1 = node1.pos, n2 = node2.pos, r1 = node1.r, r2 = node2.r;
 	var length = (r1 + r2)*8;
 	var g = Node.ctx.repulsive,
 	dx = n1[0]-n2[0],
@@ -82,7 +85,7 @@ function move(n,dt,f){
 	ny = r[1] + dt*v[1];
 	var min = n.r, hmax = Node.ctx.hmax - n.r, 
 	wmax = Node.ctx.wmax - n.r;
-	n.velocity = [v[0]+dt*f[0], v[1]+dt*f[1]];
+	n.velocity = [v[0]+dt*f[0]/n.r, v[1]+dt*f[1]/n.r];
 	if(nx<min){
 		nx = min;
 		n.velocity[0] = 0;
@@ -107,7 +110,7 @@ function calcInit(w,h,dispw, disph){
 	Node.ctx.hmax = h;
 	Node.ctx.criteria = disph;
 	Node.ctx.spring = disph;
-	Node.ctx.repulsive = disph / 4.0;
+	Node.ctx.repulsive = disph*40;
 	Node.ctx.dt = disph / 100;
 }
 function calc(all){
@@ -116,11 +119,11 @@ function calc(all){
 		var n = all[i];
 		var link = n.linked, f = [0,0];
 		for(var j=0;j<link.length;++j){
-			f=add(f, spring(n.pos, link[j].pos, n.r, link[j].r));
+			f=add(f, spring(n, link[j]));
 		}
 		for(j=0;j<all.length;++j){
 			if(n!=all[j]){
-				f = add(f, repulsive(n.pos, all[j].pos, n.r, all[j].r));
+				f = add(f, repulsive(n, all[j]));
 			}
 		}
 		f = add(f, friction(n));
