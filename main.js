@@ -9,7 +9,7 @@ function Main(ctx, w, h, data){
 		++path_length;
 	}
 	var unit = Math.floor(max / 100);
-	var len = path_length * 15;
+	var len = path_length * 10;
 	var config = {
 		width: w, height: h, padding: 5,
 		wwidth: len, wheight: len,
@@ -113,29 +113,28 @@ function isVisible(node, config){
 	}
 	return f;
 }
-/*
 function isCross(line, rect){
     var vs = [ [rect[0], rect[1]],
                [rect[1], rect[2]],
                [rect[2], rect[3]],
                [rect[3], rect[1]]];
     var f = false;
-    for(var i=0; vs.length;++i){
-		var l2 = vs[i];
-        var d  = (l2[0][0] - line[0][0]) * (line[1][1] - line[0][1]) - (l2[1][0] - line[0][1]) * 
-        if(Math.min(line[0][0], line[1][0]) > Math.max(l2[0][0],   l2[1][0]))
+    var a = line[0], b = line[1];
+    for(var i=0; i<vs.length;++i){
+		var l2 = vs[i], c = l2[0], d = l2[1];
+        var tc = (a[0] - b[0])*(c[1] - a[1]) + (a[1] - b[1])*(a[0] - c[0]);
+        var td = (a[0] - b[0])*(d[1] - a[1]) + (a[1] - b[1])*(a[0] - d[0]);
+        //直線ab と 線分 cd が交差するか
+        var cros1 = tc*td<0;
+        if(!cros1)
             continue;
-        if(Math.min(line[0][1], line[1][1]) > Math.max(l2[0][1],   l2[1][1]))
-            continue;
-        if(Math.min(l2[1][0],     l2[1][0]) > Math.max(line[0][0], line[1][0]))
-            continue;
-        if(Math.min(l2[0][1],     l2[1][1]) > Math.max(line[0][1], line[1][1]))
-            continue;
-
+        //直線cd と 線分ab が交差するか
+        var ta = (c[0] - d[0])*(a[1] - c[1]) + (c[1] - d[1])*(c[0] - a[0]);
+        var tb = (c[0] - d[0])*(b[1] - c[1]) + (c[1] - d[1])*(c[0] - b[0]);
+        if(ta*tb < 0) //交差する
+            return true;
     }
 }
-function isCrossLine(
-*/
 function calcVisibility(nodes, config){
 	var visibleNodes = {};
 	for(var k in nodes){
@@ -152,16 +151,22 @@ var cos150 = - cos30, sin150 = sin30;
 function renderLines(ctx, links, nodes, unit, visibles, config){
 	var k0, k2;
 	var objects = [];
+    var w = config.width, h = config.height;
+    var xmax = config.curx + w, ymax = config.cury + h;
+    var rect = [[config.curx, config.cury], [xmax, config.cury],
+                [config.cury, ymax       ], [xmax, ymax       ]];
 	for(k0 in links){
 		for(k1 in links[k0]){
 			if(k0==k1)continue;
 			var n0 = nodes[k0], n1 = nodes[k1];
 			if(!n0 || !n1)
 				continue;
+            var linev = [n0.pos, n1.pos];
+            //両端が見えなくて、windowと交差しないものは描画しない
+            if(!visibles[k0] && !visibles[k1] && !isCross(linev, rect))
+                continue;
+
 			var r = links[k0][k1];
-			//console.log(k0, k1);
-			if(!visibles[k0] && !visibles[k1])
-				continue;
 			var p0 = convert(n0.pos, config),
 			p1 = convert(n1.pos, config);
 			var d = dist(p0, p1), dx = p1[0] - p0[0], dy = p1[1] - p0[1];
