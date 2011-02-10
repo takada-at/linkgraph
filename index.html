@@ -21,7 +21,7 @@ function run(data){
     }
 }
 Event.observe(window, 'load', function(){
-    new Ajax.Request('./toybot.json', {onSuccess: function(r){
+    new Ajax.Request('./dummy.json', {onSuccess: function(r){
         eval('var data='+r.responseText);
         run(data);
     }});

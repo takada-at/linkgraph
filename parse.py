@@ -12,8 +12,6 @@ expr   = re.compile('opensocial_viewer_id=(\d+)')
 def parseLine(line, pathcol, timecol, timeformat, paths):
 	cols = line.split(' ')
 	path = cols[pathcol]
-	if path.find('generator.php') > 0:
-		return (None, None, None)
 	time = datetime.strptime(' '.join(cols[timecol:timecol+2]), timeformat)
 	m    = expr.search(path)
 	if not m:

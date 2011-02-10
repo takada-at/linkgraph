@@ -9,7 +9,7 @@ function Main(ctx, w, h, data){
 		++path_length;
 	}
 	var unit = Math.floor(max / 100);
-	var len = path_length * 10;
+	var len = Math.max(path_length * 10, w);
 	var config = {
 		width: w, height: h, padding: 5,
 		wwidth: len, wheight: len,
@@ -24,15 +24,16 @@ function Main(ctx, w, h, data){
 			max_node = maps[i];
 	}
 	var links = createLinkData(data.links, maps, unit);
+    var edges = createEdges(links, maps);
 	calcInit(config.wwidth, config.wheight, config.width, config.height);
 	setMouseTracker(w, config);
 	for(var j=0;j<100;++j)
-		calc(list);
+		calc(list, edges);
 	config.curx = max_node.pos[0] - w/2;
 	config.cury = max_node.pos[1] - h/2;
 		
 	function loop(){
-		render(ctx, links, list, maps, unit, config);
+		render(ctx, links, list, maps, edges, unit, config);
 	}
 	function run(){
 		//testSpring(); return;
@@ -64,7 +65,7 @@ function Main(ctx, w, h, data){
 			if(config.cury < ymax)
 				config.cury += size;
 			else
-				config.cury += size;
+				config.cury = ymax;
 			break;
 		}
 	}
@@ -72,8 +73,8 @@ function Main(ctx, w, h, data){
 		run: run, move:windowMove
 	}
 }
-function render(ctx, links, list, nodes, unit, config){
-	calc(list);
+function render(ctx, links, list, nodes, edges, unit, config){
+	calc(list, edges);
 	ctx.clearRect(0,0, config.width, config.height);
 	var visibles = calcVisibility(nodes, config);
 	renderLines(ctx, links, nodes, unit, visibles, config);
@@ -183,7 +184,7 @@ function renderLines(ctx, links, nodes, unit, visibles, config){
 			var start = add(p0, [cos*n0.r, sin*n0.r]);
 			var end = add(p0, [cos*(d-n1.r),sin*(d-n1.r)]);
      		ctx.strokeStyle = 'rgba(150, 150, 150, 0.5)';
-			ctx.lineWidth  = r.link;
+			ctx.lineWidth  = r.link + 1;
 			ctx.beginPath();
 			ctx.moveTo(start[0], start[1]);
 			ctx.lineTo(ap[0], ap[1]);
@@ -206,9 +207,6 @@ function renderNode(ctx, nodes, unit, visibles, config){
 		var pos = convert(n.pos, config);
 		ctx.lineWidth  = 1;
 		ctx.fillStyle = 'rgb(255, 255, 255)';
-		//ctx.beginPath();
-		//ctx.arc(pos[0], pos[1], size-1, 0, pi2, true);
-		//ctx.fill();
 		ctx.beginPath();
 		ctx.arc(pos[0], pos[1], size, 0, pi2, true);
 		ctx.fillStyle = selectColor(n.color, n.data, unit);
@@ -220,7 +218,7 @@ function renderNode(ctx, nodes, unit, visibles, config){
 }
 function selectColor(rand, data, unit){
 	var v = Math.abs(Math.sqrt(data/(unit*100))) % 1;
-	var rc  = Math.floor(255*v);
+	var rc  = Math.min(Math.floor(255*v) + 100, 255);
 	var alpha = 0.6;
 	if(rand == 0){
 		return 'rgba(' + rc + ', 0, 0, '+alpha+')';
@@ -228,54 +226,6 @@ function selectColor(rand, data, unit){
 		return 'rgba(0,' + rc + ', 0, '+alpha+')';
 	}
 	return 'rgba(0, 0, ' + rc + ', '+alpha+')';
-}
-function createNode(paths, unit, config){
-	var w = config.wwidth, h = config.wheight;
-	var node_maps = {};
-	var nodes = [];
-	for(var i in paths){
-		if(paths[i]<unit)
-			continue;
-		var size = paths[i]/unit;
-		if(size<10)
-			continue;
-		var min_w = min_h = size;
-		var max_w = w - size, max_h = h - size;
-		var x = Math.random()*(max_w-min_w+1) + min_w, y = Math.random()*(max_h-min_h+1) + min_h;
-		var n = new Node(x, y);
-		n.r = size;
-		n.data = paths[i];
-		n.name = i;
-		var rand = Math.floor(Math.random() * 3);
-		n.color = rand;
-		node_maps[i] = n;
-		nodes.push(n);
-	}
-	return [node_maps, nodes];
-}
-function createLinkData(links, nodes, unit){
-	var h = {};
-	var k0, k2;
-	for(k0 in links){
-		for(k1 in links[k0]){
-			var n0 = nodes[k0], n1 = nodes[k1];
-			if(!n0 || !n1){
-				continue;
-			}
-			if(n0==n1)
-				continue;
-			var data = links[k0][k1];
-			if(data < unit)
-				continue;
-			if(!h[k0]) h[k0] = {};
-			var link = Math.sqrt(data / unit);
-			h[k0][k1] = {link: link, data: data};
-			n0.link(n1);
-			if(!n1.hasLink(n0))
-                n1.link(n0);
-		}
-	}
-	return h;
 }
 function setMouseTracker(w, config){
 	var c = $('canvas');
@@ -292,16 +242,4 @@ function setMouseTracker(w, config){
 					   config.curx = tmpx;
 					   config.cury = tmpy;
 				   });
-}
-function testSpring(){
-	var f = spring([0,0], [100,100], 1, 1);
-	console.log(f);
-	var f = spring([0,0], [100,100], 1000, 1000);
-	console.log(f);
-	var f = spring([1000,1000], [0,0], 1, 1);
-	console.log(f);
-	var f = spring([1000,1000], [0,0], 1, 1);
-	console.log(f);
-	var f = spring([0,1000], [0,0], 1, 1);
-	console.log(f);
 }
