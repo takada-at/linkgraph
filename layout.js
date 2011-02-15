@@ -18,11 +18,9 @@ Node.prototype.link = function(n){
 }
 Node.ctx = {}
 function spring(node1,node2,_length){
-	//var length = _length || Node.ctx.spring;
-	//length += r1 + r2;
     var n1 = node1.pos, n2 = node2.pos, r1 = node1.r, r2 = node2.r;
     var r = Math.max(r1,r2);
-	var length = r1 + r2 + 500;
+	var length = r1 + r2 + Node.ctx.spring;
 	var k = 0.1,
 	dx = n1[0]-n2[0],
 	dy = n1[1]-n2[1],
@@ -37,12 +35,6 @@ function spring(node1,node2,_length){
 	sin = dy/d;
 	sign = d-length >= 0 ? 1 : -1,
 	ad   = Math.abs(d-length);
-    /*
-    var ld = 500;
-	var r = [cos * d2/ld, sin*d2/ld];
-    console.log(r);
-    return r;
-     */
 	if(ad == 0)
 		return [0,0];
 	f = Math.log(ad)*sign;
@@ -51,7 +43,7 @@ function spring(node1,node2,_length){
 }
 function repulsive(node1,node2, _length){
     var n1 = node1.pos, n2 = node2.pos, r1 = node1.r, r2 = node2.r;
-	//var length = (r1 + r2)*8;
+	var length = r1 + r2 + Node.ctx.spring;
 	var g = Node.ctx.repulsive,
 	dx = n1[0]-n2[0],
 	dy = n1[1]-n2[1],
@@ -64,12 +56,6 @@ function repulsive(node1,node2, _length){
 	var d  = Math.sqrt(d2);
 	var cos = dx/d,
     sin = dy/d;
-    /*
-    var ld = 500;
-    var l2 = Math.pow(ld,2);
-	var r= [- (l2/d) * cos,
-			- (l2/d) * sin];
-    return r;*/
 	var f = [g/d2*cos, g/d2*sin];
     return f;
 }
@@ -119,9 +105,10 @@ function calcInit(w,h,dispw, disph){
 	Node.ctx.wmax = w;
 	Node.ctx.hmax = h;
 	Node.ctx.criteria = disph;
-	Node.ctx.spring = disph;
+	Node.ctx.spring = disph/2;
 	Node.ctx.repulsive = disph*40;
 	Node.ctx.dt = disph / 100;
+    Node.ctx.temperature = 300.0;
 }
 function calc(all, edges){
 	var dt = Node.ctx.dt, total_energy = 0;
@@ -139,6 +126,7 @@ function calc(all, edges){
         var edge = edges[i], nn = edge[1];
         n = edge[0];
 		n.f=add(n.f, spring(n, nn));
+		nn.f=add(nn.f, spring(nn, n));
     }
 	for(var i=0;i<all.length;++i){
 		n = all[i];
@@ -149,6 +137,74 @@ function calc(all, edges){
 		total_energy += Math.pow(n.velocity[0],2) + Math.pow(n.velocity[1], 2);
     }
 	return total_energy;
+}
+function spring_fr(node1, node2){
+    var n1 = node1.pos, n2 = node2.pos, r1 = node1.r, r2 = node2.r;
+    var r = Math.max(r1,r2);
+	var length = r1 + r2 + Node.ctx.spring;
+	var dx = n1[0]-n2[0],
+	dy = n1[1]-n2[1],
+	d2 = Math.pow(dx,2) + Math.pow(dy,2);
+	if(d2==0){
+		var r0 = Math.random() * 5 - 5.0, 
+		r1 = Math.random() * 5 - 5.0;
+        return [r0,r1];
+	}
+	var d  = Math.sqrt(d2);
+	var cos = dx/d,
+	sin = dy/d;
+	var r = [cos * d2/length, sin*d2/length];
+    return r;
+
+}
+function repulsive_fr(node1,node2){
+    var n1 = node1.pos, n2 = node2.pos, r1 = node1.r, r2 = node2.r;
+	var length = r1 + r2 + Node.ctx.spring;
+	var g = Node.ctx.repulsive;
+	var dx = n1[0]-n2[0],
+	dy = n1[1]-n2[1],
+	d2 = Math.pow(dx,2) + Math.pow(dy,2);
+	if(d2==0){
+		var r0 = Math.random() * 5 - 5.0, 
+		r1 = Math.random() * 5 - 5.0;
+        return [r0,r1];
+	}
+	var d  = Math.sqrt(d2);
+	var cos = dx/d,
+    sin = dy/d;
+    var l2 = Math.pow(length,2);
+	var r= [- (l2/d) * cos,
+			- (l2/d) * sin];
+    return r;
+}
+function calc_fr(all, edges){
+	var dt = Node.ctx.dt, total_energy = 0;
+	for(var i=0;i<all.length;++i){
+		var n = all[i];
+		var link = n.linked;
+        n.f = [0,0];
+		for(j=0;j<all.length;++j){
+			if(n!=all[j]){
+				n.f = add(n.f, repulsive_fr(n, all[j]));
+			}
+		}
+	}
+    for(var i=0; i<edges.length;++i){
+        var edge = edges[i], nn = edge[1];
+        n = edge[0];
+		n.f=add(n.f, spring_fr(n, nn));
+		nn.f=add(nn.f, spring_fr(nn, n));
+    }
+	for(var i=0;i<all.length;++i){
+		n = all[i];
+		if(contact(n))
+			n.f = reflect(n.f, n);
+		move(n, dt, n.f);
+		total_energy += Math.pow(n.velocity[0],2) + Math.pow(n.velocity[1], 2);
+    }
+	return total_energy;
+}
+function move_fr(n){
 }
 function contact(n){
 	var min = n.r, hmax = Node.ctx.hmax - n.r, 
