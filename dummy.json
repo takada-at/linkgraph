@@ -1,0 +1,18 @@
+{"links": {
+  "/mypage/index": {"/somepage/somepage": 1000, "/somepage/somepage2": 300,
+                    "/somepage/somepage3": 101},
+  "/somepage/somepage": {"/mypage/index": 120, "/somepage/somepage2": 100,
+                        "/somepage/somepage3": 50},
+  "/somepage2/somepage": {"/mypage/index": 120, "/somepage2/somepage2": 100,
+                        "/somepage/somepage3": 50},
+  "/somepage/somepage2": {"/mypage/index": 120, "/somepage/somepage": 100,
+                        "/somepage/somepage3": 50}
+},
+"paths": {
+   "/mypage/index": 1000,
+   "/somepage/somepage": 400,
+   "/somepage/somepage2": 400,
+   "/somepage/somepage3": 120,
+   "/somepage2/somepage": 120,
+   "/somepage2/somepage2": 120
+}}
